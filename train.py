@@ -11,10 +11,13 @@ from scipy import ndimage
 from src.models.modnet import MODNet
 from src import trainer as MODTrainer 
 
-# Define dataset directory
+# Define dataset directory: dataset/PPM-100/train or dataset/PPM-100/val or dataset/UGD-12k
 dataset_dir = 'dataset/UGD-12k'
 
 # Define data_csv file which contains image and matte file paths
+#dataset/PPM-100/train/train_dataset_paths.csv
+#dataset/PPM-100/val/val_dataset_paths.csv 
+#dataset/UGD-12k/dataset_paths.csv
 data_csv = pd.read_csv('dataset/UGD-12k/dataset_paths.csv') 
 
 # Define hyperparameters
@@ -44,7 +47,9 @@ class ModNetDataLoader(Dataset):
         img = np.asarray(Image.open(img_path))
 
         mask = cv2.imread(mask_path, cv2.IMREAD_UNCHANGED) 
-        mask = mask/255.0 
+        if mask.min() != 0 or mask.max() != 1:
+            # Normalize the mask to the [0, 1] range
+            mask = mask.astype(float) / 255.0
 
         if len(img.shape)==2:
             img = img[:,:,None]
@@ -60,6 +65,7 @@ class ModNetDataLoader(Dataset):
         #convert Image to pytorch tensor
         img = Image.fromarray(img)
         mask = Image.fromarray(mask)
+        
         if self.transform:
             img = self.transform(img)
             trimap = self.get_trimap(mask)
@@ -68,8 +74,6 @@ class ModNetDataLoader(Dataset):
         img = self._resize(img)
         mask = self._resize(mask)
         trimap = self._resize(trimap, trimap=True)
-        if img.size() != trimap.size() or img.size() != mask.size():
-            raise ValueError("Image, trimap, and mask must have the same size")
 
         print(img.shape)
         print(mask.shape)
@@ -114,9 +118,9 @@ class ModNetDataLoader(Dataset):
         im_rw = im_rw - im_rw % 32
         im_rh = im_rh - im_rh % 32
         if trimap == True:
-            im = F.interpolate(im, size=(im_rh, im_rw), mode='area')
+            im = F.interpolate(im, size=(im_rh, im_rw), mode='nearest')
         else:
-            im = F.interpolate(im, size=(im_rh, im_rw), mode='area')
+            im = F.interpolate(im, size=(im_rh, im_rw), mode='bilinear')
         return im
     
 # Define the transformation for data

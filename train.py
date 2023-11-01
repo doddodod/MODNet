@@ -1,6 +1,7 @@
 import os
 import cv2
 import torch
+import random
 import numpy as np
 import pandas as pd
 from PIL import Image
@@ -30,17 +31,15 @@ class ModNetDataLoader(Dataset):
     def __init__(self, annotations_file, resize_dim, transform=None):
         self.img_labels =annotations_file
         self.transform=transform
-        self.resize_dim=resize_dim
-        self.current_idx = 0 
+        self.resize_dim=resize_dim 
 
     def __len__(self):
         #return the total number of images
         return len(self.img_labels)
 
-    def __getitem__(self, _):
-        img_path = self.img_labels.iloc[self.current_idx,0]
-        mask_path = self.img_labels.iloc[self.current_idx,1]
-        print(self.current_idx)
+    def __getitem__(self, idx):
+        img_path = self.img_labels.iloc[idx,0]
+        mask_path = self.img_labels.iloc[idx,1]
         print("Image Path:", img_path)
         print("Matte Path:", mask_path)
 
@@ -82,21 +81,31 @@ class ModNetDataLoader(Dataset):
         img = torch.squeeze(img, 0)
         mask = torch.squeeze(mask, 0)
         trimap = torch.squeeze(trimap, 1)
-        self.current_idx += 1 
 
         return img, trimap, mask
 
-    def get_trimap(self, alpha):
-        # alpha \in [0, 1] should be taken into account
-        # be careful when dealing with regions of alpha=0 and alpha=1
-        fg = np.array(np.equal(alpha, 255).astype(np.float32))
-        unknown = np.array(np.not_equal(alpha, 0).astype(np.float32)) # unknown = alpha > 0
-        unknown = unknown - fg
-        # image dilation implemented by Euclidean distance transform
-        unknown = ndimage.distance_transform_edt(unknown == 0) <= np.random.randint(1, 20) 
-        trimap = fg
-        trimap[unknown] = 0.5
-        return torch.unsqueeze(torch.from_numpy(trimap), dim=0)#.astype(np.uint8)
+
+    def get_trimap(self, matte):
+        matte = np.array(matte)
+        k_size = random.choice(range(2, 5))
+        iterations = np.random.randint(5, 15)
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k_size, k_size))
+        
+        # Convert matte to range [0,255] for cv2 operations
+        matte_255 = (matte * 255).astype(np.uint8)
+        dilated = cv2.dilate(matte_255, kernel, iterations=iterations)
+        eroded = cv2.erode(matte_255, kernel, iterations=iterations)
+        trimap = np.zeros_like(matte)
+        
+        # Set unknown region
+        trimap[np.logical_and(eroded <= 254.5, dilated >= 0.5)] = 0.5
+        # Set foreground region
+        trimap[eroded > 254.5] = 1
+        # Set background region
+        trimap[dilated < 0.5] = 0
+        
+        return torch.unsqueeze(torch.from_numpy(trimap), dim=0)
+
 
     def _resize(self, img, trimap=False):
         im = img[None, :, :, :]
@@ -147,7 +156,6 @@ if not os.path.isdir(evalPath):
 # metaparams
 optimizer = torch.optim.SGD(modnet.parameters(), lr=learning_rate, momentum=0.9)   # can try momentum=0.45 too
 lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=int(0.25 * total_epochs), gamma=0.1)
-
 
 # Training starts here
 for epoch in range(0, total_epochs):

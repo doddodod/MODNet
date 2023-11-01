@@ -1,174 +1,65 @@
 import os
-import cv2
-import torch
-import random
-import numpy as np
-import pandas as pd
-from PIL import Image
-import torch.nn.functional as F
+import torch 
+from PIL import Image 
+from torch.nn import MSELoss, L1Loss
 from torchvision import transforms
-from torch.utils.data import Dataset, DataLoader
-from scipy import ndimage
-from src.models.modnet import MODNet
-from src import trainer as MODTrainer 
+from torch.utils.data import DataLoader
+from matting_dataset import MattingDataset, Rescale, ToTensor, Normalize, ToTrainArray, ConvertImageDtype
+from src.trainer import supervised_training_iter, soc_adaptation_iter
+from src.models.modnet import MODNet 
 
-# Define dataset directory: dataset/PPM-100/train or dataset/PPM-100/val or dataset/UGD-12k
-dataset_dir = 'dataset/UGD-12k'
+def load_images(image_paths):
+    transform = transforms.Compose([
+        transforms.Resize((512, 512)), 
+        transforms.ToTensor(),
+    ])
+    images = [transform(Image.open(path)) for path in image_paths]
+    return torch.stack(images)
 
-# Define data_csv file which contains image and matte file paths
-#dataset/PPM-100/train/train_dataset_paths.csv
-#dataset/PPM-100/val/val_dataset_paths.csv 
-#dataset/UGD-12k/dataset_paths.csv
-data_csv = pd.read_csv('dataset/UGD-12k/dataset_paths.csv') 
+def train_model(modnet, dataloader, test_images, total_epochs, learning_rate):
+    optimizer = torch.optim.SGD(modnet.parameters(), lr=learning_rate, momentum=0.9)
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=int(0.25 * total_epochs), gamma=0.1)
 
-# Define hyperparameters
-batch_size = 16
-learning_rate = 0.01
-total_epochs = 40
+    for epoch in range(total_epochs):
+        for idx, (image, trimap, gt_matte) in enumerate(dataloader):
+            semantic_loss, detail_loss, matte_loss = supervised_training_iter(modnet, optimizer, image.cuda(), trimap.cuda(), gt_matte.cuda()) 
+            
+        lr_scheduler.step()
 
-# Create dataset class
-class ModNetDataLoader(Dataset):
-    def __init__(self, annotations_file, resize_dim, transform=None):
-        self.img_labels =annotations_file
-        self.transform=transform
-        self.resize_dim=resize_dim 
+        with torch.no_grad():
+            _,_,debugImages = modnet(test_images.cuda(), True)
+            for idx, img in enumerate(debugImages):
+                saveName = "eval_%g_%g.jpg"%(idx,epoch+1)
+                torchvision.utils.save_image(img, os.path.join(evalPath,saveName))
 
-    def __len__(self):
-        #return the total number of images
-        return len(self.img_labels)
+        print("Epoch done: " + str(epoch))
 
-    def __getitem__(self, idx):
-        img_path = self.img_labels.iloc[idx,0]
-        mask_path = self.img_labels.iloc[idx,1]
-        print("Image Path:", img_path)
-        print("Matte Path:", mask_path)
-
-        img = np.asarray(Image.open(img_path))
-
-        mask = cv2.imread(mask_path, cv2.IMREAD_UNCHANGED) 
-        if mask.min() != 0 or mask.max() != 1:
-            # Normalize the mask to the [0, 1] range
-            mask = mask.astype(float) / 255.0
-
-        if len(img.shape)==2:
-            img = img[:,:,None]
-        if img.shape[2]==1:
-            img = np.repeat(img, 3, axis=2)
-        elif img.shape[2]==4:
-            img = img[:,:,0:3]
-
-        if len(mask.shape)==3:
-            mask = mask[:,:, 0]
-        print(img.shape)
-        print(mask.shape)
-        #convert Image to pytorch tensor
-        img = Image.fromarray(img)
-        mask = Image.fromarray(mask)
+if __name__ == '__main__':
+    transform = transforms.Compose([
+        Rescale(512),
+        ToTensor(),
+        ConvertImageDtype(),
+        Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        ToTrainArray()
+    ])
         
-        if self.transform:
-            img = self.transform(img)
-            trimap = self.get_trimap(mask)
-            mask = self.transform(mask)
-
-        img = self._resize(img)
-        mask = self._resize(mask)
-        trimap = self._resize(trimap, trimap=True)
-
-        print(img.shape)
-        print(mask.shape)
-        print(trimap.shape)
-
-        img = torch.squeeze(img, 0)
-        mask = torch.squeeze(mask, 0)
-        trimap = torch.squeeze(trimap, 1)
-
-        return img, trimap, mask
-
-
-    def get_trimap(self, matte):
-        matte = np.array(matte)
-        k_size = random.choice(range(2, 5))
-        iterations = np.random.randint(5, 15)
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k_size, k_size))
-        
-        # Convert matte to range [0,255] for cv2 operations
-        matte_255 = (matte * 255).astype(np.uint8)
-        dilated = cv2.dilate(matte_255, kernel, iterations=iterations)
-        eroded = cv2.erode(matte_255, kernel, iterations=iterations)
-        trimap = np.zeros_like(matte)
-        
-        # Set unknown region
-        trimap[np.logical_and(eroded <= 254.5, dilated >= 0.5)] = 0.5
-        # Set foreground region
-        trimap[eroded > 254.5] = 1
-        # Set background region
-        trimap[dilated < 0.5] = 0
-        
-        return torch.unsqueeze(torch.from_numpy(trimap), dim=0)
-
-
-    def _resize(self, img, trimap=False):
-        im = img[None, :, :, :]
-        ref_size = self.resize_dim
-
-        # resize image for input
-        im_b, im_c, im_h, im_w = im.shape
-        if max(im_h, im_w) < ref_size or min(im_h, im_w) > ref_size:
-            if im_w >= im_h:
-                im_rh = ref_size
-                im_rw = int(im_w / im_h * ref_size)
-            elif im_w < im_h:
-                im_rw = ref_size
-                im_rh = int(im_h / im_w * ref_size)
-        else:
-            im_rh = im_h
-            im_rw = im_w
-
-        im_rw = im_rw - im_rw % 32
-        im_rh = im_rh - im_rh % 32
-        if trimap == True:
-            im = F.interpolate(im, size=(im_rh, im_rw), mode='nearest')
-        else:
-            im = F.interpolate(im, size=(im_rh, im_rw), mode='bilinear')
-        return im
+    batch_size = 16
+    total_epochs = 40  
+    learning_rate = 0.01
     
-# Define the transformation for data
-transformer = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize((0.5), (0.5))
-])
+    mattingDataset = MattingDataset(transform=transform) 
+    dataloader = DataLoader(mattingDataset, batch_size=batch_size, shuffle=True)
 
-# Create the dataset
-data = ModNetDataLoader(data_csv, 512, transform=transformer)
+    modnet = torch.nn.DataParallel(MODNet()).cuda()  
 
-# Create the data loader
-dataloader = DataLoader(data, batch_size=batch_size, shuffle=True)
+    evalPath = 'dataset/UGD-12k/result'
+    if not os.path.isdir(evalPath):
+        os.makedirs(evalPath)
 
-# import model
-modnet = torch.nn.DataParallel(MODNet()).cuda() 
+    test_image_paths = ['dataset/PPM-100/train/fg/14429083354_23c8fddff5_o.jpg']
+    test_images = load_images(test_image_paths)
 
-# for evaluate progress
-evalPath = 'dataset/PPM-100/val'
-if not os.path.isdir(evalPath):
-    os.makedirs(evalPath)
-# pick 2 or more images here and store it for infer/eval later
-
-# metaparams
-optimizer = torch.optim.SGD(modnet.parameters(), lr=learning_rate, momentum=0.9)   # can try momentum=0.45 too
-lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=int(0.25 * total_epochs), gamma=0.1)
-
-# Training starts here
-for epoch in range(0, total_epochs):
-    for idx, (image, trimap, gt_matte) in enumerate(dataloader):
-        semantic_loss, detail_loss, matte_loss = MODTrainer.supervised_training_iter(modnet, optimizer, image.cuda(), trimap.cuda(), gt_matte.cuda())
+    train_model(modnet, dataloader, test_images, total_epochs, learning_rate) 
     
-    lr_scheduler.step()
+    torch.save(modnet.state_dict(), 'dataset/UGD-12k/trained_model.pth')
 
-    # eval for progress check and save images (here's where u visualize changes over training time)
-    with torch.no_grad():
-        _,_,debugImages = modnet(testImages.cuda(),True)
-        for idx, img in enumerate(debugImages):
-            saveName = "eval_%g_%g.jpg"%(idx,epoch+1)
-            torchvision.utils.save_image(img, os.path.join(evalPath,saveName))
-
-    print("Epoch done: " + str(epoch))

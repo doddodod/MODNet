@@ -1,0 +1,24 @@
+import os
+import pandas as pd
+
+# The root of the dataset
+dataset_path = 'dataset\UGD-12k'  
+
+# Create empty lists to store image and matte file paths
+image_paths = []
+matte_paths = [] 
+
+# Traverse the dataset directory structure
+for root, dirs, files in os.walk(dataset_path):
+    for file in files:
+        if file.endswith('.png') or file.endswith('.jpg'):  # Adjust file extensions if needed
+            if 'image' in root:
+                image_paths.append(os.path.join(root, file))
+            elif 'alpha' in root:
+                matte_paths.append(os.path.join(root, file))
+
+# Create a DataFrame to store the paths
+data = pd.DataFrame({'image_path': image_paths, 'matte_path': matte_paths})
+
+# Save the DataFrame to a CSV file
+data.to_csv('dataset/UGD-12k/dataset_paths.csv', index=False)

@@ -1,7 +1,7 @@
 import os
 import torch 
+import torchvision 
 from PIL import Image 
-from torch.nn import MSELoss, L1Loss
 from torchvision import transforms
 from torch.utils.data import DataLoader
 from matting_dataset import MattingDataset, Rescale, ToTensor, Normalize, ToTrainArray, ConvertImageDtype

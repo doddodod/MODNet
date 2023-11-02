@@ -27,12 +27,12 @@ def train_model(modnet, dataloader, test_images, total_epochs, learning_rate):
         lr_scheduler.step()
 
         with torch.no_grad():
-            _,_,debugImages = modnet(test_images.cuda(), True)
+            _, _, debugImages = modnet(test_images.cuda(), True)
             for idx, img in enumerate(debugImages):
-                saveName = "eval_%g_%g.jpg"%(idx,epoch+1)
-                torchvision.utils.save_image(img, os.path.join(evalPath,saveName))
+                saveName = "eval_%g_%g.jpg"%(idx, epoch+1)
+                torchvision.utils.save_image(img, os.path.join(evalPath, saveName))
 
-        print("Epoch done: " + str(epoch))
+        print("Epoch done: " + str(epoch)) 
 
 if __name__ == '__main__':
     transform = transforms.Compose([

@@ -60,13 +60,13 @@ if __name__ == '__main__':
     modnet = MODNet(backbone_pretrained=False)
     modnet = nn.DataParallel(modnet)
 
-    ckp_pth = 'dataset/UGD-12k/trained_model.pth'
+    ckp_pth = 'pretrained/UGD-12k_trained_model.pth'
     if torch.cuda.is_available():
         modnet = modnet.cuda()
         weights = torch.load(ckp_pth)
     else:
         weights = torch.load(ckp_pth, map_location=torch.device('cpu'))
     modnet.load_state_dict(weights)
-    dataset = load_eval_dataset('src/datasets/UGD-12k')
+    dataset = load_eval_dataset('dataset/UGD-12k')
     mse, mad = eval(modnet, dataset)
     print(f'mse: {mse:6f}, mad: {mad:6f}')

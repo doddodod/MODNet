@@ -1,7 +1,7 @@
 import os
 import torch 
-import torchvision 
 from PIL import Image 
+import torchvision 
 from torchvision import transforms
 from torch.utils.data import DataLoader
 from matting_dataset import MattingDataset, Rescale, ToTensor, Normalize, ToTrainArray, ConvertImageDtype
@@ -61,5 +61,5 @@ if __name__ == '__main__':
 
     train_model(modnet, dataloader, test_images, total_epochs, learning_rate) 
     
-    torch.save(modnet.state_dict(), 'dataset/UGD-12k/trained_model.pth')
+    torch.save(modnet.state_dict(), 'pretrained/UGD-12k_trained_model.pth')
 

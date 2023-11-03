@@ -51,6 +51,16 @@ if __name__ == '__main__':
     dataloader = DataLoader(mattingDataset, batch_size=batch_size, shuffle=True)
 
     modnet = torch.nn.DataParallel(MODNet()).cuda()  
+    
+    # # Load the pre-trained model "pretrained\mobilenetv2_human_seg.ckpt" if it exists
+    # if os.path.isfile('pretrained\mobilenetv2_human_seg.ckpt'):
+    #     modnet = MODNet()  # Instantiate the model
+    #     modnet.load_state_dict(torch.load('pretrained\mobilenetv2_human_seg.ckpt'))
+    #     modnet = torch.nn.DataParallel(modnet).cuda()
+    # else:
+    #     # Handle the case where "pretrained\mobilenetv2_human_seg.ckpt" doesn't exist
+    #     print("Pre-trained model 'pretrained\mobilenetv2_human_seg.ckpt' not found.")
+    #     exit(1)
 
     evalPath = 'dataset/UGD-12k/result'
     if not os.path.isdir(evalPath):

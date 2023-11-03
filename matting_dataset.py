@@ -19,12 +19,22 @@ class MattingDataset(Dataset):
 
         self.image_file_name_list = sorted(image_file_name_list)
         self.matte_file_name_list = sorted(matte_file_name_list)
+        
+        # Check if the sizes are the same and create a mask
+        self.size_check_mask = [self.check_size(image, matte) for image, matte in zip(self.image_file_name_list, self.matte_file_name_list)] 
+        self.image_file_name_list = [image for i, image in enumerate(self.image_file_name_list) if self.size_check_mask[i]] 
+        self.matte_file_name_list = [matte for i, matte in enumerate(self.matte_file_name_list) if self.size_check_mask[i]]
+
         for img, mat in zip(self.image_file_name_list, self.matte_file_name_list):
             img_name = img.split('/')[-1].split('.')[0]  # Get the name without extension 
             mat_name = mat.split('/')[-1].split('.')[0] 
-            assert img_name == mat_name
-
+            assert img_name == mat_name 
         self.transform = transform
+        
+    def check_size(self, image_path, matte_path):
+        image = Image.open(image_path)
+        matte = Image.open(matte_path)
+        return image.size == matte.size 
 
     def __len__(self):
         return len(self.image_file_name_list)
@@ -35,7 +45,6 @@ class MattingDataset(Dataset):
 
         image = Image.open(image_file_name)
         matte = Image.open(matte_file_name)
-        # matte = matte.convert('RGB')
         trimap = self.gen_trimap(matte)
 
         data = {'image': image, 'trimap': trimap, 'gt_matte': matte}

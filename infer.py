@@ -59,12 +59,12 @@ def predit_matte(modnet: MODNet, im: Image):
 
     # resize and save matte
     matte = F.interpolate(matte, size=(im_h, im_w), mode='area')
-    matte = matte[0][0].data.cpu().numpy()
+    matte = matte[0][0].data.cpu().numpy() 
     return matte
 
 
 if __name__ == '__main__':
-    # create MODNet and load the pre-trained ckpt
+    # save the predict matte image by ckp_pth on pth 
     modnet = MODNet(backbone_pretrained=False)
     modnet = nn.DataParallel(modnet)
 
@@ -76,7 +76,7 @@ if __name__ == '__main__':
         weights = torch.load(ckp_pth, map_location=torch.device('cpu'))
     modnet.load_state_dict(weights)
 
-    pth = 'dataset/UGD-12k/eval/image/1000131748.jpg'
+    pth = 'dataset/UGD-12k/eval/image/1000131748.jpg' 
     img = Image.open(pth)
 
     matte = predit_matte(modnet, img)

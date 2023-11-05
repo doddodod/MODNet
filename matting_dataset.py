@@ -1,31 +1,37 @@
-from torch.utils.data import Dataset, DataLoader
-import numpy as np
-import random
+import os
 import cv2
-from glob import glob
 import torch
-from torchvision.transforms import functional as F
-from torchvision import transforms
+import random
+import numpy as np
 from PIL import Image
+from glob import glob
+from torchvision import transforms
+from torch.utils.data import Dataset, DataLoader
+from torchvision.transforms import functional as F
 
 class MattingDataset(Dataset):
-    def __init__(self,
-                 dataset_root_dir='dataset/UGD-12k/train', #dataset/PPM-100/train or dataset/UGD-12k/train 
-                 transform=None):
-        image_path = dataset_root_dir + '/image/*' # fg if PPM, image if UGD
-        matte_path = dataset_root_dir + '/alpha/*'         
-        image_file_name_list = glob(image_path)
-        matte_file_name_list = glob(matte_path)
+    def __init__(self, dataset_root_dir = 'dataset', transform=None):
+        # Gather image and matte file paths from both datasets
+        # ppm_image_path = os.path.join(dataset_root_dir, 'PPM-100', 'train', 'fg', '*')
+        # ppm_matte_path = os.path.join(dataset_root_dir, 'PPM-100', 'train', 'alpha', '*')
+        ugd_image_path = os.path.join(dataset_root_dir, 'UGD-12k', 'train', 'image', '*')
+        ugd_matte_path = os.path.join(dataset_root_dir, 'UGD-12k', 'train', 'alpha', '*')
 
-        self.image_file_name_list = sorted(image_file_name_list)
-        self.matte_file_name_list = sorted(matte_file_name_list)
+        # ppm_image_file_list = glob(ppm_image_path)
+        # ppm_matte_file_list = glob(ppm_matte_path)
+        ugd_image_file_list = glob(ugd_image_path)
+        ugd_matte_file_list = glob(ugd_matte_path)
+
+        # Combine the file lists
+        self.image_list = sorted(ugd_image_file_list)
+        self.matte_list = sorted(ugd_matte_file_list)
         
         # Check if the sizes are the same and create a mask
-        self.size_check_mask = [self.check_size(image, matte) for image, matte in zip(self.image_file_name_list, self.matte_file_name_list)] 
-        self.image_file_name_list = [image for i, image in enumerate(self.image_file_name_list) if self.size_check_mask[i]] 
-        self.matte_file_name_list = [matte for i, matte in enumerate(self.matte_file_name_list) if self.size_check_mask[i]]
+        self.size_check_mask = [self.check_size(image, matte) for image, matte in zip(self.image_list, self.matte_list)] 
+        self.image_list = [image for i, image in enumerate(self.image_list) if self.size_check_mask[i]] 
+        self.matte_list = [matte for i, matte in enumerate(self.matte_list) if self.size_check_mask[i]]
 
-        for img, mat in zip(self.image_file_name_list, self.matte_file_name_list):
+        for img, mat in zip(self.image_list, self.matte_list):
             img_name = img.split('/')[-1].split('.')[0]  # Get the name without extension 
             mat_name = mat.split('/')[-1].split('.')[0] 
             assert img_name == mat_name 
@@ -37,11 +43,11 @@ class MattingDataset(Dataset):
         return image.size == matte.size 
 
     def __len__(self):
-        return len(self.image_file_name_list)
+        return len(self.image_list)
 
     def __getitem__(self, index):
-        image_file_name = self.image_file_name_list[index]
-        matte_file_name = self.matte_file_name_list[index]
+        image_file_name = self.image_list[index]
+        matte_file_name = self.matte_list[index]
 
         image = Image.open(image_file_name)
         matte = Image.open(matte_file_name)
@@ -70,7 +76,6 @@ class MattingDataset(Dataset):
         trimap[dilated < 0.5] = 0
         trimap = Image.fromarray(np.uint8(trimap))
         return trimap
-
 
 class Rescale(object):
     """Rescale the image in a sample to a given size.
@@ -113,7 +118,6 @@ class ConvertImageDtype(object):
         trimap = F.convert_image_dtype(trimap, torch.float)
         gt_matte = F.convert_image_dtype(gt_matte, torch.float)
         return {'image': image, 'trimap': trimap, 'gt_matte': gt_matte}
-
 
 class Normalize(object):
     def __init__(self, mean, std, inplace=False):

@@ -10,6 +10,7 @@ Paper link: https://arxiv.org/abs/2203.16828
 
 import torch
 import torch.nn as nn
+import numpy as np
 
 
 def conv3x3(in_planes, out_planes, stride=1):
@@ -23,27 +24,53 @@ def conv1x1(in_planes, out_planes, stride=1):
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
 
+# class TFI(nn.Module):
+#     expansion = 1
+#     def __init__(self, planes,stride=1):
+#         super(TFI, self).__init__()
+#         middle_planes = int(planes/2)
+#         self.transform = conv1x1(planes, middle_planes)
+#         self.conv1 = conv3x3(middle_planes*3, planes, stride)
+#         self.bn1 = nn.BatchNorm2d(planes)
+#         self.relu = nn.ReLU(inplace=True)
+#         self.stride = stride
+
+#     def forward(self, input_s_guidance, input_m_decoder, input_m_encoder):
+#         input_s_guidance_transform = self.transform(input_s_guidance)
+#         input_m_decoder_transform = self.transform(input_m_decoder)
+#         input_m_encoder_transform = self.transform(input_m_encoder)
+#         x = torch.cat((input_s_guidance_transform,input_m_decoder_transform,input_m_encoder_transform),1)
+#         out = self.conv1(x)
+#         out = self.bn1(out)
+#         out = self.relu(out)
+#         return out
+
 class TFI(nn.Module):
     expansion = 1
-    def __init__(self, planes,stride=1):
+
+    def __init__(self, planes1,planes2,planes3,stride=1):
         super(TFI, self).__init__()
-        middle_planes = int(planes/2)
-        self.transform = conv1x1(planes, middle_planes)
-        self.conv1 = conv3x3(middle_planes*3, planes, stride)
-        self.bn1 = nn.BatchNorm2d(planes)
+        middle_planes1 = int(planes1 / 2)
+        middle_planes2 = int(planes2 / 2)
+        middle_planes3 = int(planes3 / 2)
+        self.transform1 = conv1x1(planes1, middle_planes1)
+        self.transform2 = conv1x1(planes2, middle_planes2)
+        self.transform3 = conv1x1(planes3, middle_planes3)
+        middle_planes=20
+        self.conv1 = conv3x3(middle_planes * 3, planes1, stride)
+        self.bn1 = nn.BatchNorm2d(planes1)
         self.relu = nn.ReLU(inplace=True)
         self.stride = stride
 
     def forward(self, input_s_guidance, input_m_decoder, input_m_encoder):
-        input_s_guidance_transform = self.transform(input_s_guidance)
-        input_m_decoder_transform = self.transform(input_m_decoder)
-        input_m_encoder_transform = self.transform(input_m_encoder)
-        x = torch.cat((input_s_guidance_transform,input_m_decoder_transform,input_m_encoder_transform),1)
+        input_s_guidance_transform = self.transform1(input_s_guidance)
+        input_m_decoder_transform = self.transform2(input_m_decoder)
+        input_m_encoder_transform = self.transform3(input_m_encoder)
+        x = torch.cat((input_s_guidance_transform, input_m_decoder_transform, input_m_encoder_transform), 1)
         out = self.conv1(x)
         out = self.bn1(out)
         out = self.relu(out)
         return out
-
 
 class SBFI(nn.Module):
     def __init__(self, planes,planes2,stride=1):

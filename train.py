@@ -41,14 +41,15 @@ def train_model(modnet, dataloader, total_epochs, learning_rate):
             
         lr_scheduler.step()
         
-        # with torch.no_grad():
+        with torch.no_grad():
+            call_eval(modnet)
+            torch.save(modnet.state_dict(), f'pretrained/tfi_epoch{epoch}.pth')
         #     _,_,debugImages = modnet(test_images.cuda(), True)
         #     for idx, img in enumerate(debugImages):
         #         saveName = "eval_%g_%g.jpg"%(idx,epoch+1)
         #         torchvision.utils.save_image(img, os.path.join(evalPath,saveName))
 
-        print("Epoch done: " + str(epoch))
-        # call_eval(modnet) 
+        print("Epoch done: " + str(epoch)) 
 
 if __name__ == '__main__':
     transform = transforms.Compose([
@@ -60,7 +61,7 @@ if __name__ == '__main__':
     ])
         
     batch_size = 16
-    total_epochs = [20]  
+    total_epochs = [10, 20, 30, 40, 50]  
     learning_rate = 0.01
     
     mattingDataset = MattingDataset(transform=transform) 
@@ -75,7 +76,7 @@ if __name__ == '__main__':
     # if not os.path.isdir(evalPath):
     #     os.makedirs(evalPath)
     
-    # test_image_paths = ['dataset/UGD-12k/train/image/800036118.jpg']
+    # test_image_paths = ['dataset/UGD-12k/eval/image/1000114288.jpg']
     # test_images = load_images(test_image_paths) 
     # groundtruth_image_path = 'dataset/UGD-12k/eval/alpha/1000114288.png' 
     # groundtruth_image = Image.open(groundtruth_image_path)
@@ -85,7 +86,7 @@ if __name__ == '__main__':
     
     for epochs in total_epochs:
         modnet = torch.nn.DataParallel(MODNet()).cuda()
-        train_model(modnet, dataloader, epochs, learning_rate)
+        train_model(modnet, dataloader, epochs, learning_rate) 
 
 #         # Calculate MSE and MAD
 #         with torch.no_grad():
@@ -101,6 +102,6 @@ if __name__ == '__main__':
 #             best_model = modnet 
 #             print(f'Best epochs: {epochs}, mse: {mse:.6f}, mad: {mad:.6f}')  
 
-    # Save the best model
-    torch.save(modnet.state_dict(), 'pretrained/tfi.pth')
+    # Save the best model 
+    # torch.save(modnet.state_dict(), 'pretrained/tfi.pth')
  

@@ -1,4 +1,5 @@
-from src.models.modnet import MODNet
+from src.models.modnet_old import MODNet
+#from src.models.modnet_tfi import MODNet
 from PIL import Image
 import numpy as np
 from torchvision import transforms
@@ -76,9 +77,9 @@ if __name__ == '__main__':
         weights = torch.load(ckp_pth, map_location=torch.device('cpu'))
     modnet.load_state_dict(weights)
 
-    pth = 'dataset/UGD-12k/eval/image/1000131748.jpg' 
+    pth = 'dataset/UGD-12k/eval/image/1008427924.jpg'
     img = Image.open(pth)
 
     matte = predit_matte(modnet, img)
     prd_img = Image.fromarray(((matte * 255).astype('uint8')), mode='L')
-    prd_img.save('test_predic.jpg') 
+    prd_img.save('tfi_predic_4.jpg') 

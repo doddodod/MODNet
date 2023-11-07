@@ -247,8 +247,8 @@ class mergedDecoder(nn.Module):
             hr = self.conv_hr(torch.cat((hr, img), dim=1))
             pred_detail = torch.sigmoid(hr)
 
-        print(np.shape(pred_semantic))
-        print(np.shape(pred_detail))
+        # print(np.shape(pred_semantic))
+        # print(np.shape(pred_detail))
         return pred_semantic, pred_detail, lr8x, hr2x
 
 
@@ -284,7 +284,7 @@ class FusionBranch(nn.Module):
         f = F.interpolate(f2x, scale_factor=2, mode='bilinear', align_corners=False)
         f = self.conv_f(torch.cat((f, img), dim=1))
         pred_matte = torch.sigmoid(f)
-        print(np.shape(pred_matte))
+        # print(np.shape(pred_matte))
 
         return pred_matte
 

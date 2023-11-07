@@ -1,40 +1,56 @@
-# 说明
-代码fork from [MODNet官方代码](https://github.com/ZHKKKe/MODNet) 。本项目完善了数据准备、模型评价及模型训练相关代码
-# 模型训练、评价、推理
+# information
+fork from [MODNet with Dataset Repo](https://github.com/jarlyn95/MODNet) based on [MODNet Official Repo](https://github.com/ZHKKKe/MODNet) 
+incorporate modeuls from P3M model [P3M Official Repo](https://github.com/ViTAE-Transformer/P3M-Net) 
+# training ,infrence and evaluation
 ```bash
-# 1. 下载代码并进入工作目录
-git clone https://github.com/actboy/MODNet
+# 1. download the code
+git clone https://github.com/doddodod/MODNet.git
 cd MODNet
 
-# 2. 安装依赖
+# 2. install dependencies
 pip install -r src/requirements.txt
 
-# 3. 下载并解压数据集
+# 3. dowload dataset with gdown and google drive link
 #PPM-100: 
-wget -c https://paddleseg.bj.bcebos.com/matting/datasets/PPM-100.zip -O dataset/PPM-100.zip
-unzip dataset/PPM-100.zip 
+gdown --id 1JUx-EPoV9QAhQgmW0AyOen-xKQUzZia- --output dataset/ppm-100.zip
+unzip dataset/PPM-100.zip PPM-100
 
 #UGD-12k: 
 https://github.com/fornorp/Interactive-Human-Matting/ 
 
-# 4. 数据预处理
-python matting_dataset.py
-#Change the path in dataset_root_dir, to any training dataset. 
-#Calculate trimpa by groundtruth matte and resize all images. 
+mkdir dataset/UGD-12k
+#train
+# link: https://drive.google.com/file/d/1xeHNIXUl4NTuMcwnDSCfail_IixnG3UZ/view
+gdown --id 1xeHNIXUl4NTuMcwnDSCfail_IixnG3UZ --output dataset/train.zip
+unzip dataset/train.zip train
+#evaluation
+# link: https://drive.google.com/file/d/1a3uyv4Ce-N_9CHGTFNV3qMJMZ0Qb4zSi/view
+gdown --id 1a3uyv4Ce-N_9CHGTFNV3qMJMZ0Qb4zSi --output dataset/eval.zip
+unzip dataset/eval.zip eval
+#test
+# link: https://drive.google.com/file/d/1UZTbEFv5KhOrajthf_jGuKAmxxjbgpoj/view
+gdown --id 1UZTbEFv5KhOrajthf_jGuKAmxxjbgpoj --output dataset/test.zip
+unzip dataset/test.zip test
 
-# 5. 训练模型
+# p3m-10k
+gdown --id 1LqUU7BZeiq8I3i5KxApdOJ2haXm-cEv1 --output dataset/p3m.zip
+unzip dataset/p3m.zip p3m-10k
+
+
+# 4. Model training
 python train.py
-#Change batch_size, total_epochs and learning_rate if needed. 
+#Change dataset to the training dataset.
+#Change hyper-parameters: batch_size, total_epochs and learning_rate if needed. 
 #trained model ".pth" will be save to pretrianed dir. 
 #Same number of total_epochs images of result after each epoch will be save in dataset/UGD-12k/result, of image: test_image_paths. 
 
-# 6. 模型评估
+# 6. Model evaluation
 python eval.py
 #Change ckp_pth to the pretrained model. 
 #Change dataset to the evaluation dataset. 
 #calculate the Mean Absolute Difference (MAD) and Mean Squared Error (MSE) between the groudthruth matte and the predicted alpha matte. 
 
-# 7. 模型推理
+# 7. Model Inference
 python infer.py
 #Define the predicted alpha matte by given image and the pretrained model. 
 ```

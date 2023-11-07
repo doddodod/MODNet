@@ -4,8 +4,10 @@ import torch
 import torchvision 
 import numpy as np
 from PIL import Image 
+from eval import call_eval
 from torchvision import transforms
-from src.models.modnet import MODNet 
+#from src.models.modnet import MODNet 
+from src.models.modnet_tfi import MODNet
 from torch.utils.data import DataLoader
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from src.trainer import supervised_training_iter, soc_adaptation_iter
@@ -28,7 +30,7 @@ def load_images(image_paths):
     images = [transform(Image.open(path)) for path in image_paths]
     return torch.stack(images)
 
-def train_model(modnet, dataloader, test_images, total_epochs, learning_rate):
+def train_model(modnet, dataloader, total_epochs, learning_rate):
     optimizer = torch.optim.SGD(modnet.parameters(), lr=learning_rate, momentum=0.9)
     step_size = int(0.25 * total_epochs) if total_epochs >= 4 else 1
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=0.1)
@@ -38,14 +40,15 @@ def train_model(modnet, dataloader, test_images, total_epochs, learning_rate):
             semantic_loss, detail_loss, matte_loss = supervised_training_iter(modnet, optimizer, image.cuda(), trimap.cuda(), gt_matte.cuda()) 
             
         lr_scheduler.step()
-
-        with torch.no_grad():
-            _,_,debugImages = modnet(test_images.cuda(), True)
-            for idx, img in enumerate(debugImages):
-                saveName = "eval_%g_%g.jpg"%(idx,epoch+1)
-                torchvision.utils.save_image(img, os.path.join(evalPath,saveName))
+        
+        # with torch.no_grad():
+        #     _,_,debugImages = modnet(test_images.cuda(), True)
+        #     for idx, img in enumerate(debugImages):
+        #         saveName = "eval_%g_%g.jpg"%(idx,epoch+1)
+        #         torchvision.utils.save_image(img, os.path.join(evalPath,saveName))
 
         print("Epoch done: " + str(epoch))
+        # call_eval(modnet) 
 
 if __name__ == '__main__':
     transform = transforms.Compose([
@@ -57,49 +60,47 @@ if __name__ == '__main__':
     ])
         
     batch_size = 16
-    total_epochs = [1, 2, 10, 20, 30, 40, 50]  
+    total_epochs = [20]  
     learning_rate = 0.01
     
     mattingDataset = MattingDataset(transform=transform) 
     dataloader = DataLoader(mattingDataset, batch_size=batch_size, shuffle=True)
     print("dataset loaded")
 
-    best_mse = float('inf')
-    best_mad = float('inf')
-    best_model = None
+#     best_mse = float('inf')
+#     best_mad = float('inf')
+#     best_model = None
     
-    evalPath = 'dataset/UGD-12k/result2'
-    if not os.path.isdir(evalPath):
-        os.makedirs(evalPath)
+    # evalPath = 'dataset/UGD-12k/result3'
+    # if not os.path.isdir(evalPath):
+    #     os.makedirs(evalPath)
     
-    test_image_paths = ['dataset/UGD-12k/eval/image/1000114288.jpg']
-    test_images = load_images(test_image_paths) 
-    groundtruth_image_path = 'dataset/UGD-12k/eval/alpha/1000114288.png' 
-    groundtruth_image = Image.open(groundtruth_image_path)
-    # Resize the image
-    groundtruth_image = groundtruth_image.resize((512, 512))
-    groundtruth_image = np.array(groundtruth_image) 
-    print('Resized image shape:', groundtruth_image.shape) 
+    # test_image_paths = ['dataset/UGD-12k/train/image/800036118.jpg']
+    # test_images = load_images(test_image_paths) 
+    # groundtruth_image_path = 'dataset/UGD-12k/eval/alpha/1000114288.png' 
+    # groundtruth_image = Image.open(groundtruth_image_path)
+    # # Resize the image
+    # groundtruth_image = groundtruth_image.resize((512, 512))
+    # groundtruth_image = np.array(groundtruth_image) 
     
     for epochs in total_epochs:
         modnet = torch.nn.DataParallel(MODNet()).cuda()
-        train_model(modnet, dataloader, test_images, epochs, learning_rate)
+        train_model(modnet, dataloader, epochs, learning_rate)
 
-        # Calculate MSE and MAD
-        with torch.no_grad():
-            prediction_file_path = get_latest_file(evalPath)
-            prediction_image = np.array(Image.open(prediction_file_path).convert('L')) 
-            print(groundtruth_image.shape, prediction_image.shape)
-            mse = mean_squared_error(groundtruth_image, prediction_image)
-            mad = mean_absolute_error(groundtruth_image, prediction_image) 
+#         # Calculate MSE and MAD
+#         with torch.no_grad():
+#             prediction_file_path = get_latest_file(evalPath)
+#             prediction_image = np.array(Image.open(prediction_file_path).convert('L')) 
+#             mse = mean_squared_error(groundtruth_image, prediction_image)
+#             mad = mean_absolute_error(groundtruth_image, prediction_image) 
 
-        # Check if this model is better
-        if mse < best_mse and mad < best_mad:
-            best_mse = mse
-            best_mad = mad
-            best_model = modnet 
-            print(f'Best epochs: {epochs}, mse: {mse:.6f}, mad: {mad:.6f}')  
+#         # Check if this model is better
+#         if mse < best_mse and mad < best_mad:
+#             best_mse = mse
+#             best_mad = mad
+#             best_model = modnet 
+#             print(f'Best epochs: {epochs}, mse: {mse:.6f}, mad: {mad:.6f}')  
 
     # Save the best model
-    torch.save(best_model.state_dict(), 'pretrained/best_model.pth')
+    torch.save(modnet.state_dict(), 'pretrained/tfi.pth')
  

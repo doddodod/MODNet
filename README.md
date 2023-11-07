@@ -54,11 +54,12 @@ python train.py
 
 # 5. Model evaluation
 python eval.py
+#Import model corresponding to pretrained model, same as in 4. 
 #Change ckp_pth to the pretrained model. 
 #Change dataset to the evaluation dataset. 
 #calculate the Mean Absolute Difference (MAD) and Mean Squared Error (MSE) between the groudthruth matte and the predicted alpha matte. 
 
 # 6. Model Inference
 python infer.py
-#Define the predicted alpha matte by given image and the pretrained model. 
+#Ouput the predicted alpha matte by given image, model imported and selected pretrained model. 
 ```

@@ -17,7 +17,9 @@ unzip dataset/PPM-100.zip PPM-100
 
 #UGD-12k: 
 https://github.com/fornorp/Interactive-Human-Matting/ 
-
+#data should be save in dataset, create a floder "train", and put folder image and alpha of train dataset of UGD-12k in it.
+#also create a floder "eval", and put folder image and alpha of train dataset of UGD-12k in it.
+    
 mkdir dataset/UGD-12k
 #train
 # link: https://drive.google.com/file/d/1xeHNIXUl4NTuMcwnDSCfail_IixnG3UZ/view

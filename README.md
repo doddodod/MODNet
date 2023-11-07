@@ -44,13 +44,13 @@ python train.py
 #trained model ".pth" will be save to pretrianed dir. 
 #Same number of total_epochs images of result after each epoch will be save in dataset/UGD-12k/result, of image: test_image_paths. 
 
-# 6. Model evaluation
+# 5. Model evaluation
 python eval.py
 #Change ckp_pth to the pretrained model. 
 #Change dataset to the evaluation dataset. 
 #calculate the Mean Absolute Difference (MAD) and Mean Squared Error (MSE) between the groudthruth matte and the predicted alpha matte. 
 
-# 7. Model Inference
+# 6. Model Inference
 python infer.py
 #Define the predicted alpha matte by given image and the pretrained model. 
 ```

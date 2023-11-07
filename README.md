@@ -39,6 +39,12 @@ unzip dataset/p3m.zip p3m-10k
 
 # 4. Model training
 python train.py
+
+#Change Model in train.py:
+1. Use the baseline: import from src/models/modnet_old
+2. Use the tfi: import from src/models/modnet_tfi
+3. Use the viTAE: import from src/models/modnet
+
 #Change dataset to the training dataset.
 #Change hyper-parameters: batch_size, total_epochs and learning_rate if needed. 
 #trained model ".pth" will be save to pretrianed dir. 

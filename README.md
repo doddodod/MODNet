@@ -56,6 +56,7 @@ python train.py
 2. Change hyper-parameters: batch_size, total_epochs and learning_rate if needed. 
 3. trained model ".pth" will be save to pretrianed dir. 
 4. Same number of total_epochs images of result after each epoch will be save in dataset/UGD-12k/result, of image: test_image_paths. 
+5. If the cuda memory is not enough, please change the batch_size to a smaller number.
 
 5. Pretrained Model: 
 # Due to GitHub's capabilities, our pre-training model is saved in a Google Drive link.

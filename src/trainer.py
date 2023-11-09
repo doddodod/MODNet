@@ -147,8 +147,8 @@ def supervised_training_iter(
     boundaries = (trimap < 0.5) + (trimap > 0.5)
 
     # calculate the semantic loss
-    gt_semantic = F.interpolate(gt_matte, scale_factor=1/8, mode='bilinear')  # for NC
-    # gt_semantic = F.interpolate(gt_matte, scale_factor=1/16, mode='bilinear')#for tri and original
+    # gt_semantic = F.interpolate(gt_matte, scale_factor=1/8, mode='bilinear')  # for NC
+    gt_semantic = F.interpolate(gt_matte, scale_factor=1/16, mode='bilinear')#for tfi and original
     gt_semantic = blurer(gt_semantic)
     semantic_loss = torch.mean(F.mse_loss(pred_semantic, gt_semantic))
     semantic_loss = semantic_scale * semantic_loss

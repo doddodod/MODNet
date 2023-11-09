@@ -9,6 +9,7 @@ from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
 from torchvision.transforms import functional as F
 
+#Used code in MODNet. 
 class MattingDataset(Dataset):
     def __init__(self, dataset_root_dir = 'dataset', transform=None):
         # Gather image and matte file paths from both datasets

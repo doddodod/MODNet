@@ -1,6 +1,3 @@
-#from src.models.modnet_old import MODNet
-from src.models.modnet import MODNet 
-#from src.models.modnet_tfi import MODNet
 from PIL import Image
 import numpy as np
 from torchvision import transforms
@@ -8,7 +5,11 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 
-#Used code from MODNet. 
+#Change it to the model type using:  
+from src.models.modnet_old import MODNet #baseline MODNet
+#from src.models.modnet import MODNet #ViTae 
+#from src.models.modnet_tfi import MODNet #TFI
+
 def predit_matte(modnet: MODNet, im: Image):
     # define image to tensor transform
     im_transform = transforms.Compose(
@@ -78,7 +79,7 @@ if __name__ == '__main__':
         weights = torch.load(ckp_pth, map_location=torch.device('cpu'))
     modnet.load_state_dict(weights)
 
-    pth = 'result/image_3.jpg'
+    pth = 'image_3.jpg'
     img = Image.open(pth)
 
     matte = predit_matte(modnet, img)

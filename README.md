@@ -43,23 +43,23 @@ unzip dataset/p3m.zip -d p3m-10k
 python train.py
 
 #Change Model in train.py:
-1. Use the baseline: import from src/models/modnet_old
-2. Use the tfi: import from src/models/modnet_tfi
-3. Use the viTAE: import from src/models/modnet
+1. Use the baseline: import from src.models.modnet_old
+2. Use the tfi: import from src.models.modnet_tfi
+3. Use the viTAE: import from src.models.modnet
 
-#Change dataset to the training dataset.
+#Change dataset to the training dataset: change it in matting_dataset.py
 #Change hyper-parameters: batch_size, total_epochs and learning_rate if needed. 
 #trained model ".pth" will be save to pretrianed dir. 
 #Same number of total_epochs images of result after each epoch will be save in dataset/UGD-12k/result, of image: test_image_paths. 
 
 # 5. Model evaluation
 python eval.py
-#Import model corresponding to pretrained model, same as in 4. 
+#Change dataset to the evaluation dataset: change it in eval.py line 148
+#Use pretrained model to evaluate the dataset: change it in eval.py line 141
 #Change ckp_pth to the pretrained model. 
-#Change dataset to the evaluation dataset. 
 #calculate the Mean Absolute Difference (MAD) and Mean Squared Error (MSE) between the groudthruth matte and the predicted alpha matte. 
 
 # 6. Model Inference
 python infer.py
-#Ouput the predicted alpha matte by given image, model imported and selected pretrained model. 
+#Ouput the predicted alpha matte by a given image, can select the input image and the pretrained model. 
 ```

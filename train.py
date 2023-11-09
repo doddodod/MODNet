@@ -70,6 +70,10 @@ if __name__ == '__main__':
     mattingDataset = MattingDataset(transform=transform) 
     dataloader = DataLoader(mattingDataset, batch_size=batch_size, shuffle=True)
     print("dataset loaded")
+    
+    for epochs in total_epochs:
+        modnet = torch.nn.DataParallel(MODNet()).cuda()
+        train_model(modnet, dataloader, epochs, learning_rate) 
 
 #     best_mse = float('inf')
 #     best_mad = float('inf')
@@ -86,10 +90,6 @@ if __name__ == '__main__':
     # # Resize the image
     # groundtruth_image = groundtruth_image.resize((512, 512))
     # groundtruth_image = np.array(groundtruth_image) 
-    
-    for epochs in total_epochs:
-        modnet = torch.nn.DataParallel(MODNet()).cuda()
-        train_model(modnet, dataloader, epochs, learning_rate) 
 
 #         # Calculate MSE and MAD
 #         with torch.no_grad():

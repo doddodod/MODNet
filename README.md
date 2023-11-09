@@ -17,7 +17,7 @@ pip install -r src/requirements.txt
 3. dowload dataset with gdown and google drive link
 #PPM-100: 
 gdown --id 1JUx-EPoV9QAhQgmW0AyOen-xKQUzZia- --output dataset/ppm-100.zip
-unzip dataset/PPM-100.zip -d PPM-100
+unzip dataset/PPM-100.zip -d dataset/PPM-100
 
 #UGD-12k: 
 https://github.com/fornorp/Interactive-Human-Matting/ 
@@ -28,19 +28,19 @@ mkdir dataset/UGD-12k
 #train
 # link: https://drive.google.com/file/d/1xeHNIXUl4NTuMcwnDSCfail_IixnG3UZ/view
 gdown --id 1xeHNIXUl4NTuMcwnDSCfail_IixnG3UZ --output dataset/UGD-12k/train.zip
-! unzip dataset/UGD-12k/train.zip -d train
+! unzip dataset/UGD-12k/train.zip -d dataset/UGD-12k/train
 #evaluation
 # link: https://drive.google.com/file/d/1a3uyv4Ce-N_9CHGTFNV3qMJMZ0Qb4zSi/view
 gdown --id 1a3uyv4Ce-N_9CHGTFNV3qMJMZ0Qb4zSi --output dataset/UGD-12k/eval.zip
-! unzip dataset/UGD-12k/eval.zip -d eval
+! unzip dataset/UGD-12k/eval.zip -d dataset/UGD-12k/eval
 #test
 # link: https://drive.google.com/file/d/1UZTbEFv5KhOrajthf_jGuKAmxxjbgpoj/view
 gdown --id 1UZTbEFv5KhOrajthf_jGuKAmxxjbgpoj --output dataset//UGD-12k/test.zip
-unzip dataset/UGD-12k//test.zip -d test
+unzip dataset/UGD-12k//test.zip -d dataset/UGD-12k/test
 
 # p3m-10k
 gdown --id 1LqUU7BZeiq8I3i5KxApdOJ2haXm-cEv1 --output dataset/p3m.zip
-unzip dataset/p3m.zip -d p3m-10k
+unzip dataset/p3m.zip -d dataset/p3m-10k
 
 
 4. Model training

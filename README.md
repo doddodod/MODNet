@@ -1,6 +1,10 @@
 # information
 fork from [MODNet with Dataset Repo](https://github.com/jarlyn95/MODNet) based on [MODNet Official Repo](https://github.com/ZHKKKe/MODNet) 
 incorporate modules from P3M model [P3M Official Repo](https://github.com/ViTAE-Transformer/P3M-Net) 
+
+Any query please check our git repositpry [Our Repo](https://github.com/doddodod/MODNet) 
+
+
 # training ,infrence and evaluation
 ```bash
 # 1. download the code

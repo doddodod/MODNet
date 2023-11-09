@@ -1,6 +1,10 @@
 # information
 fork from [MODNet with Dataset Repo](https://github.com/jarlyn95/MODNet) based on [MODNet Official Repo](https://github.com/ZHKKKe/MODNet) 
 incorporate modules from P3M model [P3M Official Repo](https://github.com/ViTAE-Transformer/P3M-Net) 
+
+Any query please check our git repositpry [Our Repo](https://github.com/doddodod/MODNet) 
+
+
 # training ,infrence and evaluation
 ```bash
 # 1. download the code
@@ -43,9 +47,9 @@ unzip dataset/p3m.zip -d p3m-10k
 python train.py
 
 #Change Model in train.py:
-1. Use the baseline: import from src.models.modnet_old
-2. Use the tfi: import from src.models.modnet_tfi
-3. Use the viTAE: import from src.models.modnet
+1. Use the baseline: import from src.models.modnet_old. Modify the src/trainer.py to use line 151
+2. Use the tfi: import from src.models.modnet_tfi. Modify the src/trainer.py to use line 151
+3. Use the viTAE: import from src.models.modnet. Modify the src/trainer.py to use line 150
 
 #Change dataset to the training dataset: change it in matting_dataset.py
 #Change hyper-parameters: batch_size, total_epochs and learning_rate if needed. 

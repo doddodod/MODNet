@@ -11,7 +11,7 @@ from scipy.ndimage import gaussian_filter
 from skimage.measure import label, regionprops
 from scipy.ndimage import distance_transform_edt
 
-
+#Used code from MODNet and P3M. 
 def load_eval_dataset(image_path, matte_path): 
     image_file_name_list = glob(image_path)
     matte_file_name_list = glob(matte_path)
@@ -136,8 +136,8 @@ if __name__ == '__main__':
     modnet = MODNet(backbone_pretrained=False)
     modnet = nn.DataParallel(modnet)
     
-    #ckp_pth = 'pretrained/UGD-12k_trained_model.pth' 
-    #ckp_pth = 'pretrained/UGD-12k_on_pretrained_model.pth' 
+    #ckp_pth = 'pretrained/MODNet_UGD.pth' 
+    ckp_pth = 'pretrained/tfi_epoch27.pth'
     ckp_pth = 'pretrained/vitae_epoch23.pth'
     #ckp_pth = 'pretrained/modnet_photographic_portrait_matting.ckpt' 
     

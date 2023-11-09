@@ -6,8 +6,8 @@ import numpy as np
 from PIL import Image 
 from eval import call_eval
 from torchvision import transforms
-#from src.models.modnet import MODNet 
-from src.models.modnet_tfi import MODNet
+from src.models.modnet import MODNet 
+#from src.models.modnet_tfi import MODNet
 from torch.utils.data import DataLoader
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from src.trainer import supervised_training_iter, soc_adaptation_iter
@@ -43,7 +43,7 @@ def train_model(modnet, dataloader, total_epochs, learning_rate):
         
         with torch.no_grad():
             call_eval(modnet)
-            torch.save(modnet.state_dict(), f'pretrained/tfi_epoch{epoch}.pth')
+            torch.save(modnet.state_dict(), f'pretrained/vitae_epoch{epoch}.pth')
         #     _,_,debugImages = modnet(test_images.cuda(), True)
         #     for idx, img in enumerate(debugImages):
         #         saveName = "eval_%g_%g.jpg"%(idx,epoch+1)
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     ])
         
     batch_size = 16
-    total_epochs = [10, 20, 30, 40, 50]  
+    total_epochs = [50]  
     learning_rate = 0.01
     
     mattingDataset = MattingDataset(transform=transform) 
@@ -76,7 +76,7 @@ if __name__ == '__main__':
     # if not os.path.isdir(evalPath):
     #     os.makedirs(evalPath)
     
-    # test_image_paths = ['dataset/UGD-12k/eval/image/1000114288.jpg']
+    # test_image_paths = ['dataset/UGD-12k/train/image/800036118.jpg']
     # test_images = load_images(test_image_paths) 
     # groundtruth_image_path = 'dataset/UGD-12k/eval/alpha/1000114288.png' 
     # groundtruth_image = Image.open(groundtruth_image_path)

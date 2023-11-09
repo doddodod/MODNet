@@ -1,4 +1,5 @@
-from src.models.modnet_old import MODNet
+#from src.models.modnet_old import MODNet
+from src.models.modnet import MODNet 
 #from src.models.modnet_tfi import MODNet
 from PIL import Image
 import numpy as np
@@ -7,7 +8,7 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 
-
+#Used code from MODNet. 
 def predit_matte(modnet: MODNet, im: Image):
     # define image to tensor transform
     im_transform = transforms.Compose(
@@ -69,7 +70,7 @@ if __name__ == '__main__':
     modnet = MODNet(backbone_pretrained=False)
     modnet = nn.DataParallel(modnet)
 
-    ckp_pth = 'pretrained/UGD-12k_trained_model.pth'
+    ckp_pth = 'pretrained/vitae_epoch21.pth'
     if torch.cuda.is_available():
         modnet = modnet.cuda()
         weights = torch.load(ckp_pth)
@@ -77,9 +78,9 @@ if __name__ == '__main__':
         weights = torch.load(ckp_pth, map_location=torch.device('cpu'))
     modnet.load_state_dict(weights)
 
-    pth = 'dataset/UGD-12k/eval/image/1008427924.jpg'
+    pth = 'result/image_3.jpg'
     img = Image.open(pth)
 
     matte = predit_matte(modnet, img)
     prd_img = Image.fromarray(((matte * 255).astype('uint8')), mode='L')
-    prd_img.save('tfi_predic_4.jpg') 
+    prd_img.save('ViTAE_3.jpg') 

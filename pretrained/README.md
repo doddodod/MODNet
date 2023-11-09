@@ -1,2 +1,2 @@
-## MODNet - Pre-Trained Models
-This folder is used to save the official pre-trained models of MODNet. You can download them from this [link](https://drive.google.com/drive/folders/1umYmlCulvIFNaqPjwod1SayFmSRHziyR?usp=sharing).
+## Pre-Trained Models
+This folder is used to save the official pre-trained models of our baseline MODNet, TFI and ViTAE models trained by UGD-12k. You can download them from this [link](https://drive.google.com/drive/folders/1jxl29ine1rniXENvEKgiaJCUUHLHom2s?usp=drive_link).

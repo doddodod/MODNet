@@ -52,14 +52,19 @@ python train.py
 #trained model ".pth" will be save to pretrianed dir. 
 #Same number of total_epochs images of result after each epoch will be save in dataset/UGD-12k/result, of image: test_image_paths. 
 
-# 5. Model evaluation
+# 5. Pretrain Model: 
+#Our pretrined model are saved in the google drive link due to the capability of GitHub. 
+#Place it in the pretrained model if needed. 
+#link: https://drive.google.com/drive/folders/1jxl29ine1rniXENvEKgiaJCUUHLHom2s?usp=drive_link 
+
+# 6. Model evaluation
 python eval.py
 #Change dataset to the evaluation dataset: change it in eval.py line 148
 #Use pretrained model to evaluate the dataset: change it in eval.py line 141
 #Change ckp_pth to the pretrained model. 
 #calculate the Mean Absolute Difference (MAD) and Mean Squared Error (MSE) between the groudthruth matte and the predicted alpha matte. 
 
-# 6. Model Inference
+# 7. Model Inference
 python infer.py
 #Ouput the predicted alpha matte by a given image, can select the input image and the pretrained model. 
 ```
